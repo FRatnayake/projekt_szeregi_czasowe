@@ -1,0 +1,9 @@
+^LICENSE\.md$
+^.*\.Rproj$
+^\.Rproj\.user$
+^README\.Rmd$
+^data-raw$
+^\.github$
+^\.git$
+^\.DS_Store$
+^salesTS_.*\.tar\.gz$

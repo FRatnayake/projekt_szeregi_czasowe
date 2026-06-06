@@ -1,0 +1,165 @@
+---
+title: "Raport sprzedazy detalicznej (salesTS)"
+output: rmarkdown::html_vignette
+params:
+  train_path: ""
+  stores_path: ""
+  holidays_path: ""
+  store_nbr: 3
+  family: "BEVERAGES"
+  n_max: 100000
+vignette: >
+  %\VignetteIndexEntry{Raport sprzedazy detalicznej (salesTS)}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  warning = FALSE,
+  message = FALSE,
+  fig.width = 7,
+  fig.height = 4
+)
+library(salesTS)
+suppressPackageStartupMessages({
+  library(dplyr)
+})
+```
+
+```{r load-data, include = FALSE}
+# Gdy sciezki sa puste, raport dziala na wbudowanych danych przykladowych,
+# dzieki czemu renderuje sie BEZ zewnetrznych plikow.
+use_sample <- !nzchar(params$train_path)
+
+if (use_sample) {
+  raw <- sample_sales |>
+    left_join(sample_stores, by = "store_nbr")
+} else {
+  raw <- load_sales_data(
+    params$train_path,
+    stores_path = if (nzchar(params$stores_path)) params$stores_path else NULL,
+    holidays_path = if (nzchar(params$holidays_path)) params$holidays_path else NULL,
+    n_max = params$n_max
+  )
+}
+```
+
+Raport wygenerowano `r format(Sys.Date())`.
+Zrodlo danych: **`r if (use_sample) "dane przykladowe (sample_sales)" else params$train_path`**.
+
+# 1. Przeglad danych i jakosc
+
+```{r overview}
+walidacja <- validate_sales_ts(raw)
+summary(walidacja)
+```
+
+```{r overview-print}
+walidacja
+```
+
+# 2. Czyszczenie i log zmian
+
+```{r cleaning}
+dane <- clean_sales_ts(raw, missing = "interpolate", dedupe = "sum")
+attr(dane, "cleaning_log")
+```
+
+# 3. Kluczowe metryki sprzedazy
+
+```{r metrics}
+metryki <- compute_sales_metrics(dane, group_by = c("store_nbr", "family"))
+head(dplyr::arrange(metryki, dplyr::desc(total_sales)), 10)
+```
+
+# 4. Trendy sprzedazy
+
+```{r trend-line}
+plot_sales_trends(dane, type = "line", group_by = "family")
+```
+
+```{r trend-heatmap}
+plot_sales_trends(dane, type = "heatmap")
+```
+
+# 5. Analiza promocji
+
+```{r promo-plot}
+plot_sales_trends(dane, type = "promo", group_by = "family")
+```
+
+```{r promo-table}
+metryki |>
+  dplyr::group_by(family) |>
+  dplyr::summarise(promo_uplift_pct = mean(promo_uplift_pct, na.rm = TRUE)) |>
+  dplyr::arrange(dplyr::desc(promo_uplift_pct))
+```
+
+# 6. Wplyw swiat na sprzedaz
+
+```{r holiday, results = "asis"}
+if ("is_holiday" %in% names(dane)) {
+  print(plot_sales_trends(dane, type = "holiday"))
+  hol <- metryki |>
+    dplyr::filter(!is.na(holiday_uplift_pct)) |>
+    dplyr::group_by(family) |>
+    dplyr::summarise(holiday_uplift_pct = mean(holiday_uplift_pct, na.rm = TRUE)) |>
+    dplyr::arrange(dplyr::desc(holiday_uplift_pct))
+  knitr::kable(hol, caption = "Sredni wzrost sprzedazy w swieta wg kategorii")
+} else {
+  cat("Kolumna `is_holiday` jest niedostepna (nie podano pliku swiat),",
+      "wiec analiza swiateczna zostala pominieta.\n")
+}
+```
+
+# 7. Porownanie sklepow i kategorii
+
+```{r logic}
+wyniki <- sales_ts_logic(
+  dane,
+  .funs = list(metryki = function(d) compute_sales_metrics(d, group_by = "family")),
+  group_by = "store_nbr"
+)
+# Laczymy metryki ze wszystkich sklepow w jedna tabele.
+purrr::map2(wyniki, names(wyniki), ~ dplyr::mutate(.x$metryki, store = .y)) |>
+  dplyr::bind_rows() |>
+  dplyr::arrange(dplyr::desc(total_sales)) |>
+  head(10)
+```
+
+# 8. Prognozy ARIMA vs Prophet
+
+```{r prognosis}
+seria <- list(store_nbr = params$store_nbr, family = params$family)
+seria_dostepna <- nrow(dplyr::filter(
+  dane, store_nbr == params$store_nbr, family == params$family
+)) > 0
+if (!seria_dostepna) {
+  seria <- list(store_nbr = dane$store_nbr[1], family = dane$family[1])
+}
+
+prognoza <- create_prognosis(
+  dane,
+  series = seria,
+  models = c("arima", "prophet"),
+  horizon = 30,
+  frequency = "day",
+  backtest = TRUE
+)
+plot(prognoza)
+```
+
+```{r prognosis-table}
+knitr::kable(prognoza$backtest, caption = "Dokladnosc backtestingu (mniej = lepiej)")
+```
+
+Lepszy model wg RMSE: **`r prognoza$best_model`**.
+
+# 9. Podsumowanie menedzerskie i rekomendacje
+
+```{r mgmt}
+create_management_summary(dane, period_days = 30)
+```

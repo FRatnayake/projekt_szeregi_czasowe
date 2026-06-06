@@ -1,0 +1,21 @@
+# R session / history
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+.DS_Store
+
+# Built artifacts
+inst/doc
+doc
+Meta
+/*.tar.gz
+/*.Rcheck/
+src/*.o
+src/*.so
+src/*.dll
+
+# Raw Kaggle CSV files: too large and license-restricted to commit.
+# (The synthetic fixtures live in inst/extdata/ and are committed.)
+data-raw/*
+!data-raw/generate_sample_data.R

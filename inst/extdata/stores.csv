@@ -1,0 +1,7 @@
+store_nbr,city,state,type,cluster
+1,Quito,Pichincha,B,14
+2,Machala,El Oro,B,15
+3,Quito,Pichincha,A,3
+4,Quito,Pichincha,D,9
+5,Guayaquil,Guayas,A,4
+6,Ambato,Tungurahua,E,5

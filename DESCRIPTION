@@ -1,0 +1,39 @@
+Package: salesTS
+Title: Pakiet_projekt_szeregi_czasowe
+Version: 0.1.0
+Authors@R: c(
+    person("Franciszek", "Ratnayake", email = "f.filipowski@student.uw.edu.pl", role = c("aut", "cre")),
+    person("Kacper", "Nalecz", role = "aut"))
+Description: Pakiet umożliwia wczytywanie, walidację, czyszczenie i analizę
+    danych sprzedażowych w czasie, obliczanie metryk biznesowych, tworzenie
+    wizualizacji oraz generowanie prognoz metodami ARIMA i Prophet.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+Depends:
+    R (>= 4.1.0)
+Imports:
+    cli,
+    dplyr,
+    forecast,
+    ggplot2,
+    lubridate,
+    purrr,
+    readr,
+    rlang,
+    stats,
+    tibble,
+    tidyr,
+    zoo
+Suggests:
+    knitr,
+    plotly,
+    prophet,
+    rmarkdown,
+    testthat (>= 3.0.0)
+VignetteBuilder: knitr
+Config/testthat/edition: 3
+LazyData: true
+URL: https://github.com/FRatnayake/projekt_szeregi_czasowe
+BugReports: https://github.com/FRatnayake/projekt_szeregi_czasowe/issues
+Config/roxygen2/version: 8.0.0

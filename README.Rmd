@@ -1,0 +1,120 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%",
+  warning = FALSE,
+  message = FALSE
+)
+```
+
+# salesTS
+
+`salesTS` to pakiet R do analizy detalicznych szeregów czasowych sprzedaży. Dostarcza spójny pipeline: od wczytania surowych plików CSV, przez kontrolę jakości danych, czyszczenie i inżynierię metryk, aż po wizualizacje, podsumowania menedżerskie i prognozy ARIMA oraz
+Prophet.
+
+> Konwencja: nazwy funkcji i dokumentacja są po angielsku, natomiast komunikaty
+> dla użytkownika oraz raporty biznesowe są po polsku.
+
+## Instalacja
+
+```{r, eval = FALSE}
+# install.packages("devtools")
+devtools::install_github("FRatnayake/projekt_szeregi_czasowe")
+```
+
+## Przykład end-to-end (na danych wbudowanych)
+
+```{r setup}
+library(salesTS)
+suppressPackageStartupMessages(library(dplyr))
+
+# Łączymy sprzedaż z metadanymi sklepów.
+data <- sample_sales |>
+  left_join(sample_stores, by = "store_nbr")
+```
+
+### 1. Walidacja jakości danych
+
+```{r validate}
+walidacja <- validate_sales_ts(data)
+summary(walidacja)
+```
+
+### 2. Czyszczenie
+
+```{r clean}
+dane_czyste <- clean_sales_ts(data, missing = "interpolate", dedupe = "sum")
+attr(dane_czyste, "cleaning_log")
+```
+
+### 3. Metryki sprzedaży
+
+```{r metrics}
+metryki <- compute_sales_metrics(dane_czyste, group_by = c("store_nbr", "family"))
+head(metryki)
+```
+
+### 4. Wizualizacje
+
+```{r plot-line, fig.height = 4}
+plot_sales_trends(dane_czyste, type = "line", group_by = "family")
+```
+
+```{r plot-heatmap, fig.height = 4}
+plot_sales_trends(dane_czyste, type = "heatmap")
+```
+
+### 5. Podsumowanie menedżerskie
+
+```{r mgmt}
+podsumowanie <- create_management_summary(dane_czyste, period_days = 30)
+podsumowanie
+```
+
+### 6. Programowanie funkcyjne (wiele analiz naraz)
+
+```{r logic}
+wyniki <- sales_ts_logic(
+  dane_czyste,
+  .funs = list(metryki = function(d) compute_sales_metrics(d, group_by = "family")),
+  filters = list(type = sort(unique(dane_czyste$type))[1]),
+  group_by = "store_nbr"
+)
+names(wyniki)
+```
+
+### 7. Prognoza (ARIMA vs Prophet)
+
+```{r prognosis, fig.height = 4}
+prognoza <- create_prognosis(
+  dane_czyste,
+  series = list(store_nbr = 1, family = "BEVERAGES"),
+  models = "arima",
+  horizon = 30,
+  backtest = TRUE
+)
+prognoza$backtest
+plot(prognoza)
+```
+
+## Funkcje
+
+| Funkcja | Opis |
+| `load_sales_data()` | Wczytanie i wzbogacenie danych (metadane, święta) |
+| `load_holiday_data()` | Wczytanie i parsowanie kalendarza świąt |
+| `validate_sales_ts()` | Kontrola jakości danych (bez modyfikacji) |
+| `clean_sales_ts()` | Czyszczenie: braki, duplikaty, agregacja |
+| `compute_sales_metrics()` | Metryki sprzedaży per grupa |
+| `plot_sales_trends()` | Wizualizacje (line/decomposition/heatmap/promo/holiday) |
+| `create_management_summary()` | Narracyjne podsumowanie menedżerskie |
+| `sales_ts_logic()` | Funkcja wyższego rzędu: filtry + zestaw analiz |
+| `create_prognosis()` | Prognozy ARIMA i Prophet z backtestingiem |
+| `make_sample_sales()` | Generator syntetycznych danych |

@@ -1,0 +1,21 @@
+date,type,locale,locale_name,description,transferred
+2015-01-01,Holiday,National,Ecuador,Primer dia del ano,False
+2015-02-16,Holiday,National,Ecuador,Carnaval,False
+2015-02-17,Holiday,National,Ecuador,Carnaval,False
+2015-04-03,Holiday,National,Ecuador,Viernes Santo,False
+2015-05-01,Holiday,National,Ecuador,Dia del Trabajo,False
+2015-05-24,Holiday,National,Ecuador,Batalla de Pichincha,True
+2015-05-25,Transfer,National,Ecuador,Traslado Batalla,False
+2015-08-10,Holiday,National,Ecuador,Primer Grito Independencia,False
+2015-11-02,Holiday,National,Ecuador,Dia de Difuntos,False
+2015-11-03,Holiday,National,Ecuador,Independencia de Cuenca,False
+2015-12-25,Holiday,National,Ecuador,Navidad,False
+2015-11-27,Event,National,Ecuador,Black Friday,False
+2015-07-24,Holiday,Local,Guayaquil,Fundacion de Guayaquil,False
+2015-12-06,Holiday,Local,Quito,Fundacion de Quito,False
+2015-04-12,Holiday,Local,Cuenca,Fundacion de Cuenca,False
+2015-04-13,Holiday,Local,Ambato,Fiesta de las Flores,False
+2015-10-09,Holiday,Regional,Guayas,Independencia de Guayaquil,False
+2015-03-06,Holiday,Regional,Pichincha,Fiesta regional,False
+2015-08-15,Bridge,National,Ecuador,Puente,False
+2015-08-14,Work Day,National,Ecuador,Recupero puente,False
